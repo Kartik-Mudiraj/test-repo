@@ -1,26 +1,26 @@
-name: Protect the branch
-on: 
-  workflow_dispatch
+name: Apply Branch Protection
 
-env:
-  test-repo
+on:
+  push:
+    branches:
+      - main  # Adjust this according to your default branch
 
 jobs:
   apply_branch_protection:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check if branch is main
-        id: check_branch
-        run: echo "::set-output name=is_main_branch::${GITHUB_REF##*/ == 'main'}"
+      - name: Check if repository is test-repo
+        id: check_repo
+        run: echo "::set-output name=is_test_repo::${{ github.repository == 'your_username/test-repo' }}"
 
-      - name: Apply branch protection
-        if: steps.check_branch.outputs.is_main_branch
+      - name: Apply branch protection if repository is test-repo
+        if: steps.check_repo.outputs.is_test_repo
         run: |
           curl -X PUT \
           -H "Accept: application/vnd.github.luke-cage-preview+json" \
           -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          https://api.github.com/repos/<your_username>/$env/branches/main/protection \
+          https://api.github.com/repos/${{ github.repository }}/branches/main/protection \
           -d '{
                 "required_status_checks": null,
                 "enforce_admins": true,
