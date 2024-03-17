@@ -1,0 +1,33 @@
+name: Protect the branch
+on: 
+  workflow_dispatch
+
+env:
+  test-repo
+
+jobs:
+  apply_branch_protection:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if branch is main
+        id: check_branch
+        run: echo "::set-output name=is_main_branch::${GITHUB_REF##*/ == 'main'}"
+
+      - name: Apply branch protection
+        if: steps.check_branch.outputs.is_main_branch
+        run: |
+          curl -X PUT \
+          -H "Accept: application/vnd.github.luke-cage-preview+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/<your_username>/$env/branches/main/protection \
+          -d '{
+                "required_status_checks": null,
+                "enforce_admins": true,
+                "required_pull_request_reviews": {
+                  "dismiss_stale_reviews": true,
+                  "require_code_owner_reviews": true,
+                  "required_approving_review_count": 1
+                },
+                "restrictions": null
+              }'
